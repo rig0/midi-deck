@@ -20,27 +20,27 @@ SINKS = {
 # Define Macros/Note Keys
 ACTIONS = {
     # MainSink
-    5: (SINKS[1], "speaker"),
-    6: (SINKS[1], "headphone"),
-    7: (SINKS[1], "mute"),
+    "C3": (SINKS[1], "speaker"),
+    "C#3": (SINKS[1], "headphone"),
+    "D3": (SINKS[1], "mute"),
     # WebSink
-    8: (SINKS[2], "speaker"),
-    9: (SINKS[2], "headphone"),
-    10: (SINKS[2], "mute"),
+    "E3": (SINKS[2], "speaker"),
+    "F3": (SINKS[2], "headphone"),
+    "F#3": (SINKS[2], "mute"),
     # MusicSink
-    11: (SINKS[3], "speaker"),
-    12: (SINKS[3], "headphone"),
-    13: (SINKS[3], "mute"),
+    "G#3": (SINKS[3], "speaker"),
+    "A3": (SINKS[3], "headphone"),
+    "A#3": (SINKS[3], "mute"),
     # DiscordSink
-    14: (SINKS[4], "speaker"),
-    15: (SINKS[4], "headphone"),
-    16: (SINKS[4], "mute"),
+    "C4": (SINKS[4], "speaker"),
+    "C#4": (SINKS[4], "headphone"),
+    "D4": (SINKS[4], "mute"),
 }
 
 
 # Previous values for jitter filtering
 prev_val = {cc: -1 for cc in SINKS}
-THRESHOLD = 1
+THRESHOLD = 2
 
 
 # Find the MIDI input port by name.
