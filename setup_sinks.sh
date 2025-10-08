@@ -21,5 +21,5 @@ for sink in "${!SINKS[@]}"; do
     fi
 
     # link to hardware output | moved to midi_deck.py
-    pw-link "$sink" "$HW_OUT"
+    #pw-link "$sink" "$HW_OUT"
 done
