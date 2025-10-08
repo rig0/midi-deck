@@ -8,9 +8,6 @@ declare -A SINKS=(
     [DiscordSink]="Discord"
 )
 
-# Target hardware output
-HW_OUT="alsa_output.pci-0000_00_1f.3.analog-stereo"
-
 for sink in "${!SINKS[@]}"; do
     # check if sink already exists
     if ! pactl list short sinks | grep -q "^$sink"; then
@@ -19,7 +16,4 @@ for sink in "${!SINKS[@]}"; do
     else
         echo "Sink $sink already exists"
     fi
-
-    # link to hardware output | moved to midi_deck.py
-    #pw-link "$sink" "$HW_OUT"
 done
