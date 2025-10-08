@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import mido
 import pulsectl
+from pydbus import SessionBus
 
 # Midi device name
 MIDI_NAME = "MIDI Deck"
@@ -115,16 +116,16 @@ def toggle_mute(sink_name):
 def toggle_output(sink_name, output_device):
     sink = find_sink_by_name(sink_name)
     output = find_sink_by_name(output_device)
-
-    print(f"Sink: {sink}")
-    print(f"Output: {output}")
-
     if not sink:
         return
-
     state = mgr.toggle(sink, output)
     print(f"{sink.name} -> {output.description} Connected" if state else f"{sink.name} -> {output.description} Disconnected")
 
+# Create Initial connections fom sinks to outputs
+for sink in SINKS:
+    #print(SINKS[sink])
+    toggle_output(SINKS[sink], SpeakerOut)
+    toggle_output(SINKS[sink], HeadphoneOut)
 
 # Parse the midi messages
 def handle_cc(cc_type, cc_number, value):
