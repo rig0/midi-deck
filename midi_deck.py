@@ -41,9 +41,44 @@ ACTIONS = {
 THRESHOLD = 2
 last_values = {}
 
+# Manage loopbacks to cleanly toggle output
+class LoopbackManager:
+    def __init__(self):
+        self.pulse = pulsectl.Pulse("midi-router")
+        self.active = {}  # (custom_sink, hardware_sink) -> module_id
+
+    def _find_existing(self, custom_sink, hardware_sink):
+        """Check if a loopback already exists"""
+        target_args = f"source={custom_sink.monitor_source_name} sink={hardware_sink.name}"
+        for mod in self.pulse.module_list():
+            if mod.name == "module-loopback" and target_args in mod.argument:
+                return mod.index
+        return None
+
+    def toggle(self, custom_sink, hardware_sink):
+        key = (custom_sink.name, hardware_sink.name)
+
+        # already active? unload it
+        if key in self.active:
+            self.pulse.module_unload(self.active[key])
+            del self.active[key]
+            return False
+
+        # not active: check if one exists already
+        existing = self._find_existing(custom_sink, hardware_sink)
+        if existing:
+            self.active[key] = existing
+            return True
+
+        # otherwise create a new loopback
+        args = f"source={custom_sink.monitor_source_name} sink={hardware_sink.name} sink_input_properties='application.name=\"mDeck\" media.name=\"{custom_sink.description} → {hardware_sink.description}\"' sink_output_properties='application.name=\"mDeck\" media.name=\"{custom_sink.description} Source\"'"
+        module_id = self.pulse.module_load("module-loopback", args)
+        self.active[key] = module_id
+        return True
+
 # Create pulse controller
 pulse = pulsectl.Pulse("midi-deck-interface")
-
+mgr = LoopbackManager()
 
 # Find the MIDI input port by name
 def find_midi_port(name: str):
@@ -79,20 +114,17 @@ def toggle_mute(sink_name):
 # Toggle output audio device with macropad
 def toggle_output(sink_name, output_device):
     sink = find_sink_by_name(sink_name)
+    output = find_sink_by_name(output_device)
+
+    print(f"Sink: {sink}")
+    print(f"Output: {output}")
+
     if not sink:
         return
-    print(f"Sink: {sink}")
-    print(f"Output Device: {output_device}")
-    print(f"Input List: {pulse.sink_list()}")
-    for input in pulse.sink_input_list():
-        print(f"Input: {input}")
-        if input.sink == sink.index:
-            output = find_sink_by_name(output_device)
-            print(f"Output: {output}")
-            if output:
-                # FIX THIS
-                #pulse.sink_input_move(sink.index, output.index)
-                print(f"[MOVE] {sink.name} -> {output.description}")
+
+    state = mgr.toggle(sink, output)
+    print(f"{sink.name} -> {output.description} Connected" if state else f"{sink.name} -> {output.description} Disconnected")
+
 
 # Parse the midi messages
 def handle_cc(cc_type, cc_number, value):
