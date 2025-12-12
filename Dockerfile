@@ -23,6 +23,7 @@ RUN dnf install -y \
     alsa-lib \
     pulseaudio-libs \
     pipewire-pulseaudio \
+    pulseaudio-utils \
     dbus \
     dbus-libs \
     python3-gobject \
