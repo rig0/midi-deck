@@ -1,3 +1,5 @@
-Dockerfile
-compose.yaml
+__pycache__/
+data/
+.venv/
+.env
 wip/
