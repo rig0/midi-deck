@@ -1,0 +1,62 @@
+version: '3.8'
+
+services:
+  midi-deck:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: midi-deck-app
+
+    # Run as the host user to ensure proper permissions for audio and MIDI devices
+    user: "${UID:-1000}:${GID:-1000}"
+
+    # Mount the application directory for live code updates during development
+    volumes:
+      # Application source code - allows editing without rebuilding
+      - ./:/app
+
+      # MIDI and ALSA device access - required for MIDI hardware communication
+      # /dev/snd contains all ALSA sound devices including MIDI interfaces
+      - /dev/snd:/dev/snd
+
+      # PulseAudio/PipeWire socket - required for audio control via pulsectl
+      # This socket allows the container to communicate with the host's audio server
+      - ${XDG_RUNTIME_DIR}/pulse:${XDG_RUNTIME_DIR}/pulse
+
+      # D-Bus session socket - required for D-Bus communication via pydbus
+      # D-Bus is used for inter-process communication with system services
+      - ${XDG_RUNTIME_DIR}/bus:${XDG_RUNTIME_DIR}/bus
+
+    # Device access for ALSA/MIDI
+    devices:
+      - /dev/snd:/dev/snd
+
+    environment:
+      # PulseAudio/PipeWire configuration
+      # Points to the PulseAudio socket in the runtime directory
+      - PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native
+
+      # Runtime directory for PulseAudio and other user services
+      - XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}
+
+      # D-Bus session bus address for D-Bus communication
+      - DBUS_SESSION_BUS_ADDRESS=unix:path=${XDG_RUNTIME_DIR}/bus
+
+      # User/Group IDs for proper permission handling
+      - UID=${UID:-1000}
+      - GID=${GID:-1000}
+
+    network_mode: "host"
+
+    # Privileged mode provides full device access including MIDI hardware
+    # This is needed for raw MIDI device access and ALSA operations
+    # Alternative: Use cap_add with specific capabilities (see commented section below)
+    privileged: true
+
+    # Alternative to privileged mode (more secure but may require adjustments):
+    # cap_add:
+    #   - SYS_ADMIN      # For device management
+    #   - SYS_RAWIO      # For raw I/O operations
+    #   - SYS_NICE       # For real-time audio priority
+
+    restart: unless-stopped

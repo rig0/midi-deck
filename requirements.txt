@@ -1,0 +1,17 @@
+# MIDI Device Control Dependencies
+#
+# IMPORTANT: python3-rtmidi should be installed via your system package manager
+# rather than pip to ensure proper MIDI backend support.
+#
+# Installation commands by distribution:
+#   Fedora:        sudo dnf install python3-rtmidi
+#   Debian/Ubuntu: sudo apt install python3-rtmidi
+#
+# For interfacing with MIDI hardware
+mido>=1.2.10
+
+# For PulseAudio/PipeWire control
+pulsectl>=22.3.2
+
+# For D-Bus communication
+pydbus>=0.6.0
