@@ -1,12 +1,9 @@
 # MIDI Device Control Dependencies
 #
-# IMPORTANT: python3-rtmidi should be installed via your system package manager
-# rather than pip to ensure proper MIDI backend support.
-#
-# Installation commands by distribution:
-#   Fedora:        sudo dnf install python3-rtmidi
-#   Debian/Ubuntu: sudo apt install python3-rtmidi
-#
+# python-rtmidi: RTMIDI backend for MIDI device support
+# Note: Builds from source, requires gcc-c++, python3-devel, and alsa-lib-devel
+python-rtmidi>=1.4.0
+
 # For interfacing with MIDI hardware
 mido>=1.2.10
 
