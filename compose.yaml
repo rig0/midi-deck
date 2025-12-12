@@ -36,6 +36,9 @@ services:
       # Points to the PulseAudio socket in the runtime directory
       - PULSE_SERVER=unix:${XDG_RUNTIME_DIR}/pulse/native
 
+      # PulseAudio cookie for authentication
+      - PULSE_COOKIE=${XDG_RUNTIME_DIR}/pulse/cookie
+
       # Runtime directory for PulseAudio and other user services
       - XDG_RUNTIME_DIR=${XDG_RUNTIME_DIR}
 
@@ -45,6 +48,9 @@ services:
       # User/Group IDs for proper permission handling
       - UID=${UID:-1000}
       - GID=${GID:-1000}
+
+    # Use host IPC namespace for PulseAudio/PipeWire shared memory
+    ipc: host
 
     network_mode: "host"
 

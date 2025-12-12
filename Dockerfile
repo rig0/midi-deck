@@ -12,6 +12,8 @@ FROM fedora:latest
 # - pipewire-pulseaudio: PipeWire PulseAudio compatibility layer
 # - dbus: D-Bus system for inter-process communication
 # - dbus-libs: D-Bus client libraries
+# - python3-gobject: Python bindings for GObject (provides gi module for pydbus)
+# - gobject-introspection-devel: Development files for GObject introspection (required for pydbus)
 RUN dnf install -y \
     python3 \
     python3-pip \
@@ -23,6 +25,8 @@ RUN dnf install -y \
     pipewire-pulseaudio \
     dbus \
     dbus-libs \
+    python3-gobject \
+    gobject-introspection-devel \
     && dnf clean all
 
 # Set the working directory
