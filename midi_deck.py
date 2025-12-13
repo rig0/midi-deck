@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 import mido
 import pulsectl
-from pydbus import SessionBus
+
+# from pydbus import SessionBus
 
 # Midi device name
 MIDI_NAME = "MIDI Deck"
 
 # Hardware outputs
-SpeakerOut   = "alsa_output.pci-0000_00_1f.3.analog-stereo"
+SpeakerOut = "alsa_output.pci-0000_00_1f.3.analog-stereo"
 HeadphoneOut = "alsa_output.usb-3142_fifine_Microphone-00.analog-stereo"
 
 # Virtual inputs/sinks
@@ -42,6 +43,7 @@ ACTIONS = {
 THRESHOLD = 2
 last_values = {}
 
+
 # Manage loopbacks to cleanly toggle output
 class LoopbackManager:
     def __init__(self):
@@ -50,7 +52,9 @@ class LoopbackManager:
 
     def _find_existing(self, custom_sink, hardware_sink):
         """Check if a loopback already exists"""
-        target_args = f"source={custom_sink.monitor_source_name} sink={hardware_sink.name}"
+        target_args = (
+            f"source={custom_sink.monitor_source_name} sink={hardware_sink.name}"
+        )
         for mod in self.pulse.module_list():
             if mod.name == "module-loopback" and target_args in mod.argument:
                 return mod.index
@@ -72,21 +76,26 @@ class LoopbackManager:
             return True
 
         # otherwise create a new loopback
-        args = f"source={custom_sink.monitor_source_name} sink={hardware_sink.name} sink_input_properties='application.name=\"mDeck\" media.name=\"{custom_sink.description} → {hardware_sink.description}\"' sink_output_properties='application.name=\"mDeck\" media.name=\"{custom_sink.description} Source\"'"
+        args = f'source={custom_sink.monitor_source_name} sink={hardware_sink.name} sink_input_properties=\'application.name="mDeck" media.name="{custom_sink.description} → {hardware_sink.description}"\' sink_output_properties=\'application.name="mDeck" media.name="{custom_sink.description} Source"\''
         module_id = self.pulse.module_load("module-loopback", args)
         self.active[key] = module_id
         return True
 
+
 # Create pulse controller
 pulse = pulsectl.Pulse("midi-deck-interface")
 mgr = LoopbackManager()
+
 
 # Find the MIDI input port by name
 def find_midi_port(name: str):
     for port_name in mido.get_input_names():
         if name in port_name:
             return port_name
-    raise RuntimeError(f"MIDI device '{name}' not found. Available: {mido.get_input_names()}")
+    raise RuntimeError(
+        f"MIDI device '{name}' not found. Available: {mido.get_input_names()}"
+    )
+
 
 # Find sink by name
 def find_sink_by_name(name):
@@ -94,6 +103,7 @@ def find_sink_by_name(name):
         if sink.name == name:
             return sink
     return None
+
 
 # Set volume with sliders
 def set_volume(sink_name, value):
@@ -105,12 +115,14 @@ def set_volume(sink_name, value):
         percent = int(vol * 100)
         print(f"[VOLUME] {sink_name} -> {percent}%")
 
+
 # Toggle mute with macropad
 def toggle_mute(sink_name):
     sink = find_sink_by_name(sink_name)
     if sink:
         pulse.mute(sink, not sink.mute)
         print(f"[MUTE] {sink_name} -> {sink.mute}")
+
 
 # Toggle output audio device with macropad
 def toggle_output(sink_name, output_device):
@@ -119,13 +131,19 @@ def toggle_output(sink_name, output_device):
     if not sink:
         return
     state = mgr.toggle(sink, output)
-    print(f"{sink.name} -> {output.description} Connected" if state else f"{sink.name} -> {output.description} Disconnected")
+    print(
+        f"{sink.name} -> {output.description} Connected"
+        if state
+        else f"{sink.name} -> {output.description} Disconnected"
+    )
+
 
 # Create Initial connections fom sinks to outputs
 for sink in SINKS:
-    #print(SINKS[sink])
+    # print(SINKS[sink])
     toggle_output(SINKS[sink], SpeakerOut)
     toggle_output(SINKS[sink], HeadphoneOut)
+
 
 # Parse the midi messages
 def handle_cc(cc_type, cc_number, value):
@@ -147,11 +165,12 @@ def handle_cc(cc_type, cc_number, value):
         elif action == "headphone":
             toggle_output(sink_name, HeadphoneOut)
 
+
 # MIDI listener
 print("Listening for MIDI inputs...")
 with mido.open_input(find_midi_port(MIDI_NAME)) as port:
     for msg in port:
-        #print(msg)
+        # print(msg)
         if msg.type == "control_change":
             handle_cc(msg.type, msg.control, msg.value)
         elif msg.type == "note_on":
