@@ -9,7 +9,6 @@
 ![Black](https://img.shields.io/badge/Black-000?logo=black)
 
 ![Latest Tag](https://img.shields.io/github/v/tag/rig0/midi-deck?labelColor=222&color=80ff63&label=latest)
-![Stability](https://img.shields.io/badge/stability-stable-80ff63?labelColor=222)
 ![Maintained](https://img.shields.io/badge/maintained-yes-80ff63?labelColor=222)
 ![GitHub last commit](https://img.shields.io/github/last-commit/rig0/midi-deck?labelColor=222&color=80ff63)
 
