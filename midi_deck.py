@@ -1,8 +1,42 @@
 #!/usr/bin/env python3
+import logging
+
+# from pydbus import SessionBus
+from logging.handlers import RotatingFileHandler
+
 import mido
 import pulsectl
 
-# from pydbus import SessionBus
+# ----------------------------
+# Logging Configuration
+# ----------------------------
+
+# Create data directory if it doesn't exist
+# os.makedirs("./data", exist_ok=True)
+
+# Create logger
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)
+
+# Create formatter
+formatter = logging.Formatter(
+    "%(asctime)s [%(levelname)s] %(module)s: %(message)s",
+    datefmt="%m/%d/%Y %H:%M:%S",
+)
+
+# Console handler
+console_handler = logging.StreamHandler()
+console_handler.setFormatter(formatter)
+logger.addHandler(console_handler)
+
+# Rotating file handler
+file_handler = RotatingFileHandler(
+    "midi_deck.log",
+    maxBytes=5 * 1024 * 1024,  # 5MB per file
+    backupCount=3,  # Keep 3 backups (main.log.1, main.log.2, main.log.3)
+)
+file_handler.setFormatter(formatter)
+logger.addHandler(file_handler)
 
 # Midi device name
 MIDI_NAME = "MIDI Deck"
@@ -113,7 +147,7 @@ def set_volume(sink_name, value):
         vol = float(value) / 127.0
         pulse.volume_set_all_chans(sink, vol)
         percent = int(vol * 100)
-        print(f"[VOLUME] {sink_name} -> {percent}%")
+        logger.info(f"[VOLUME] {sink_name} -> {percent}%")
 
 
 # Toggle mute with macropad
@@ -121,7 +155,7 @@ def toggle_mute(sink_name):
     sink = find_sink_by_name(sink_name)
     if sink:
         pulse.mute(sink, not sink.mute)
-        print(f"[MUTE] {sink_name} -> {sink.mute}")
+        logger.info(f"[MUTE] {sink_name} -> {sink.mute}")
 
 
 # Toggle output audio device with macropad
@@ -131,7 +165,7 @@ def toggle_output(sink_name, output_device):
     if not sink:
         return
     state = mgr.toggle(sink, output)
-    print(
+    logger.info(
         f"{sink.name} -> {output.description} Connected"
         if state
         else f"{sink.name} -> {output.description} Disconnected"
@@ -167,7 +201,7 @@ def handle_cc(cc_type, cc_number, value):
 
 
 # MIDI listener
-print("Listening for MIDI inputs...")
+logger.info("Listening for MIDI inputs...")
 with mido.open_input(find_midi_port(MIDI_NAME)) as port:
     for msg in port:
         # print(msg)
