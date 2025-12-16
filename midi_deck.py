@@ -1,7 +1,5 @@
 #!/usr/bin/env python3
 import logging
-
-# from pydbus import SessionBus
 from logging.handlers import RotatingFileHandler
 
 import mido

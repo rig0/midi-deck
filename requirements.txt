@@ -9,6 +9,3 @@ mido>=1.2.10
 
 # For PulseAudio/PipeWire control
 pulsectl>=22.3.2
-
-# For D-Bus communication
-pydbus>=0.6.0
