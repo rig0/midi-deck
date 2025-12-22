@@ -9,3 +9,17 @@ mido>=1.2.10
 
 # For PulseAudio/PipeWire control
 pulsectl>=22.3.2
+
+# Database and Web Framework Dependencies (Phase 2+)
+#
+# SQLAlchemy: ORM for database management
+SQLAlchemy>=2.0.0
+
+# Alembic: Database migration tool
+alembic>=1.17.0
+
+# Flask: Web framework for REST API and UI
+Flask>=3.0.0
+
+# Flask-CORS: CORS support for API
+flask-cors>=4.0.0
