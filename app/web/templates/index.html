@@ -5,18 +5,68 @@
 {% block content %}
 <div class="dashboard">
     <h2>Dashboard</h2>
-    <p>Real-time audio control status and monitoring.</p>
 
-    <!-- TODO: Phase 6 - Implement dashboard UI -->
-    <div class="placeholder">
-        <p>Dashboard will display:</p>
-        <ul>
-            <li>Current volume levels for each channel</li>
-            <li>Connection status (which outputs are connected)</li>
-            <li>Mute status indicators</li>
-            <li>Active session name</li>
-            <li>Quick save/load session buttons</li>
-        </ul>
+    <div class="status-grid">
+        <!-- Current Session Info -->
+        <div class="card">
+            <h3>Current Session</h3>
+            <div id="current-session-info">
+                <p class="session-name" id="session-name">Loading...</p>
+                <p class="session-updated" id="session-updated"></p>
+                <div class="button-group">
+                    <button onclick="saveCurrentSession()" class="btn btn-primary">Save Session</button>
+                    <a href="/sessions" class="btn btn-secondary">Manage Sessions</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Status -->
+        <div class="card">
+            <h3>System Status</h3>
+            <div id="system-status">
+                <div class="status-item">
+                    <span class="status-label">Virtual Sinks:</span>
+                    <span class="status-value" id="sinks-count">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Hardware Outputs:</span>
+                    <span class="status-value" id="outputs-count">-</span>
+                </div>
+                <div class="status-item">
+                    <span class="status-label">Active Connections:</span>
+                    <span class="status-value" id="connections-count">-</span>
+                </div>
+            </div>
+        </div>
     </div>
+
+    <!-- Audio Channels Overview -->
+    <div class="card">
+        <h3>Audio Channels</h3>
+        <div id="channels-overview" class="channels-grid">
+            <!-- Channels will be populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="card">
+        <h3>Quick Actions</h3>
+        <div class="button-group">
+            <a href="/control" class="btn btn-primary">Real-Time Control</a>
+            <a href="/config" class="btn btn-secondary">Configuration</a>
+            <a href="/midi" class="btn btn-secondary">MIDI Mappings</a>
+        </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="status-message" class="message" style="display: none;"></div>
 </div>
+
+<script>
+    // Auto-refresh dashboard every 2 seconds
+    setInterval(refreshDashboard, 2000);
+
+    // Initial load
+    refreshDashboard();
+</script>
 {% endblock %}

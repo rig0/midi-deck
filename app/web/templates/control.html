@@ -1,0 +1,49 @@
+{% extends "base.html" %}
+
+{% block title %}Real-Time Control - MIDI Deck{% endblock %}
+
+{% block content %}
+<div class="control">
+    <h2>Real-Time Audio Control</h2>
+    <p>Control volume, mute, and routing for all audio channels.</p>
+
+    <!-- Audio Channels Control -->
+    <div class="card">
+        <h3>Audio Channels</h3>
+        <div id="channels-control" class="channels-control-grid">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Connection Matrix -->
+    <div class="card">
+        <h3>Output Routing Matrix</h3>
+        <p>Toggle connections between virtual sinks and hardware outputs.</p>
+        <div id="routing-matrix" class="routing-matrix">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Quick Save -->
+    <div class="card">
+        <h3>Session Control</h3>
+        <div class="button-group">
+            <button onclick="saveCurrentSession()" class="btn btn-primary">Save Current Session</button>
+            <a href="/sessions" class="btn btn-secondary">Manage Sessions</a>
+        </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="status-message" class="message" style="display: none;"></div>
+</div>
+
+<script>
+    // Auto-refresh every 1 second for real-time updates
+    setInterval(loadControlStatus, 1000);
+
+    // Initial load
+    window.addEventListener('load', () => {
+        loadControlStatus();
+    });
+</script>
+{% endblock %}

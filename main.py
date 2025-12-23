@@ -119,11 +119,15 @@ def main():
         logger.warning("Continuing without session management")
 
     if args.web_only:
-        # TODO: Phase 5-6 - Run web interface only
+        # Phase 5-6 - Run web interface only
         logger.info("Web-only mode: Starting web interface...")
-        # app = create_app()
-        # run_web_server(app)
-        logger.warning("Web interface not yet implemented (Phase 5-6)")
+        from app.web.app import create_app, run_web_server, set_managers
+
+        # Configure web app with manager instances
+        set_managers(audio_manager, loopback_manager, session_manager)
+
+        app = create_app()
+        run_web_server(app)
         sys.exit(0)
     else:
         # Phase 1 - Initialize MIDI controller
@@ -135,15 +139,19 @@ def main():
             logger.error(f"Failed to initialize MIDI controller: {e}", exc_info=True)
             sys.exit(1)
 
-        # TODO: Phase 7 - Start web interface in background if enabled
+        # Phase 7 - Start web interface in background if enabled
         if not args.no_web:
-            # from threading import Thread
-            # app = create_app()
-            # web_thread = Thread(target=run_web_server, args=(app,), daemon=True)
-            # web_thread.start()
-            logger.info(
-                "Web interface will be started in background (not yet implemented)"
-            )
+            from threading import Thread
+
+            from app.web.app import create_app, run_web_server, set_managers
+
+            # Configure web app with manager instances
+            set_managers(audio_manager, loopback_manager, session_manager)
+
+            app = create_app()
+            web_thread = Thread(target=run_web_server, args=(app,), daemon=True)
+            web_thread.start()
+            logger.info("Web interface started in background (http://127.0.0.1:5000)")
 
         # Setup signal handlers for graceful shutdown
         shutdown_event = {"triggered": False}

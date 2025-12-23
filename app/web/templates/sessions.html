@@ -5,19 +5,78 @@
 {% block content %}
 <div class="sessions">
     <h2>Session Management</h2>
-    <p>Save, load, and manage audio configuration sessions.</p>
 
-    <!-- TODO: Phase 6 - Implement sessions UI -->
-    <div class="placeholder">
-        <p>Sessions page will include:</p>
-        <ul>
-            <li>List of all saved sessions</li>
-            <li>Create new session button</li>
-            <li>Load session functionality</li>
-            <li>Delete session option</li>
-            <li>Set as default session</li>
-            <li>Session details (volumes, connections, mutes)</li>
-        </ul>
+    <div class="card">
+        <div class="card-header">
+            <h3>Saved Sessions</h3>
+            <button onclick="showCreateSessionModal()" class="btn btn-primary">Create New Session</button>
+        </div>
+
+        <div id="sessions-list" class="sessions-grid">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="status-message" class="message" style="display: none;"></div>
+</div>
+
+<!-- Create Session Modal -->
+<div id="create-session-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('create-session-modal')">&times;</span>
+        <h3>Create New Session</h3>
+        <form id="create-session-form" onsubmit="createSession(event)">
+            <div class="form-group">
+                <label for="session-name">Session Name:</label>
+                <input type="text" id="session-name" required class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="session-description">Description:</label>
+                <textarea id="session-description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="form-check">
+                <input type="checkbox" id="save-current-state" checked>
+                <label for="save-current-state">Save current audio state to this session</label>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">Create</button>
+                <button type="button" onclick="closeModal('create-session-modal')" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
     </div>
 </div>
+
+<!-- Edit Session Modal -->
+<div id="edit-session-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('edit-session-modal')">&times;</span>
+        <h3>Edit Session</h3>
+        <form id="edit-session-form" onsubmit="updateSession(event)">
+            <input type="hidden" id="edit-session-id">
+            <div class="form-group">
+                <label for="edit-session-name">Session Name:</label>
+                <input type="text" id="edit-session-name" required class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="edit-session-description">Description:</label>
+                <textarea id="edit-session-description" class="form-control" rows="3"></textarea>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">Update</button>
+                <button type="button" onclick="closeModal('edit-session-modal')" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Load sessions on page load
+    window.addEventListener('load', () => {
+        loadSessions();
+    });
+
+    // Refresh every 5 seconds
+    setInterval(loadSessions, 5000);
+</script>
 {% endblock %}

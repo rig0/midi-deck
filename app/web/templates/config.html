@@ -5,17 +5,151 @@
 {% block content %}
 <div class="configuration">
     <h2>Configuration</h2>
-    <p>Manage hardware outputs, virtual sinks, and MIDI mappings.</p>
 
-    <!-- TODO: Phase 6 - Implement configuration UI -->
-    <div class="placeholder">
-        <p>Configuration page will include:</p>
-        <ul>
-            <li>Hardware Outputs management (add/edit/delete)</li>
-            <li>Virtual Sinks configuration (channels 1-4)</li>
-            <li>MIDI button mappings editor</li>
-            <li>General settings (MIDI device name, jitter threshold, etc.)</li>
-        </ul>
+    <!-- Hardware Outputs Section -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Hardware Outputs</h3>
+            <button onclick="showAddOutputModal()" class="btn btn-primary">Add Output</button>
+        </div>
+        <div id="hardware-outputs-list" class="config-list">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- Virtual Sinks Section -->
+    <div class="card">
+        <div class="card-header">
+            <h3>Virtual Sinks (Channels)</h3>
+            <button onclick="showAddSinkModal()" class="btn btn-primary">Add Sink</button>
+        </div>
+        <div id="virtual-sinks-list" class="config-list">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- General Settings Section -->
+    <div class="card">
+        <h3>General Settings</h3>
+        <form id="settings-form" onsubmit="saveSettings(event)">
+            <div class="form-grid">
+                <div class="form-group">
+                    <label for="midi_device_name">MIDI Device Name:</label>
+                    <input type="text" id="midi_device_name" name="midi_device_name" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="jitter_threshold">Jitter Threshold:</label>
+                    <input type="number" id="jitter_threshold" name="jitter_threshold" class="form-control" min="1" max="10">
+                </div>
+                <div class="form-group">
+                    <label for="default_output">Default Output:</label>
+                    <input type="text" id="default_output" name="default_output" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="log_level">Log Level:</label>
+                    <select id="log_level" name="log_level" class="form-control">
+                        <option value="DEBUG">DEBUG</option>
+                        <option value="INFO">INFO</option>
+                        <option value="WARNING">WARNING</option>
+                        <option value="ERROR">ERROR</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="web_host">Web Host:</label>
+                    <input type="text" id="web_host" name="web_host" class="form-control">
+                </div>
+                <div class="form-group">
+                    <label for="web_port">Web Port:</label>
+                    <input type="number" id="web_port" name="web_port" class="form-control" min="1024" max="65535">
+                </div>
+                <div class="form-group">
+                    <label for="auto_save_session">Auto-save Session:</label>
+                    <select id="auto_save_session" name="auto_save_session" class="form-control">
+                        <option value="true">Enabled</option>
+                        <option value="false">Disabled</option>
+                    </select>
+                </div>
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">Save Settings</button>
+                <button type="button" onclick="loadSettings()" class="btn btn-secondary">Reload</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- Hardware Discovery Tool -->
+    <div class="card">
+        <h3>Hardware Discovery</h3>
+        <p>Discover available audio hardware devices on your system.</p>
+        <button onclick="discoverHardware()" class="btn btn-secondary">Scan for Devices</button>
+        <div id="discovered-devices" class="discovered-list" style="display: none;">
+            <!-- Populated when discovery runs -->
+        </div>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="status-message" class="message" style="display: none;"></div>
+</div>
+
+<!-- Add Output Modal -->
+<div id="add-output-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('add-output-modal')">&times;</span>
+        <h3>Add Hardware Output</h3>
+        <form id="add-output-form" onsubmit="addOutput(event)">
+            <div class="form-group">
+                <label for="output-name">Name:</label>
+                <input type="text" id="output-name" required class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="output-device">Device Name:</label>
+                <input type="text" id="output-device" required class="form-control">
+                <small>Use hardware discovery tool to find device names</small>
+            </div>
+            <div class="form-group">
+                <label for="output-description">Description:</label>
+                <input type="text" id="output-description" class="form-control">
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">Add</button>
+                <button type="button" onclick="closeModal('add-output-modal')" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
     </div>
 </div>
+
+<!-- Add Sink Modal -->
+<div id="add-sink-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('add-sink-modal')">&times;</span>
+        <h3>Add Virtual Sink</h3>
+        <form id="add-sink-form" onsubmit="addSink(event)">
+            <div class="form-group">
+                <label for="sink-channel">Channel Number:</label>
+                <input type="number" id="sink-channel" required class="form-control" min="1" max="16">
+            </div>
+            <div class="form-group">
+                <label for="sink-name">Sink Name:</label>
+                <input type="text" id="sink-name" required class="form-control">
+            </div>
+            <div class="form-group">
+                <label for="sink-description">Description:</label>
+                <input type="text" id="sink-description" class="form-control">
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">Add</button>
+                <button type="button" onclick="closeModal('add-sink-modal')" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Load all configuration on page load
+    window.addEventListener('load', () => {
+        loadHardwareOutputs();
+        loadVirtualSinks();
+        loadSettings();
+    });
+</script>
 {% endblock %}

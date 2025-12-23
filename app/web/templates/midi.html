@@ -1,0 +1,120 @@
+{% extends "base.html" %}
+
+{% block title %}MIDI Mappings - MIDI Deck{% endblock %}
+
+{% block content %}
+<div class="midi-mappings">
+    <h2>MIDI Mappings Configuration</h2>
+    <p>Configure MIDI button and fader mappings.</p>
+
+    <!-- MIDI Mappings by Channel -->
+    <div class="card">
+        <h3>Button Mappings</h3>
+        <p>Configure which MIDI notes trigger which actions for each channel.</p>
+        <div id="midi-mappings-list" class="midi-grid">
+            <!-- Populated by JavaScript -->
+        </div>
+    </div>
+
+    <!-- MIDI Info -->
+    <div class="card">
+        <h3>MIDI Configuration</h3>
+        <div class="info-grid">
+            <div class="info-item">
+                <strong>Device Name:</strong>
+                <span id="midi-device-name">Loading...</span>
+            </div>
+            <div class="info-item">
+                <strong>Jitter Threshold:</strong>
+                <span id="jitter-threshold">Loading...</span>
+            </div>
+        </div>
+        <a href="/config" class="btn btn-secondary">Edit Settings</a>
+    </div>
+
+    <!-- Fader Mappings Info -->
+    <div class="card">
+        <h3>Fader Mappings</h3>
+        <p>Faders are automatically mapped to channels based on MIDI CC numbers:</p>
+        <table class="mappings-table">
+            <thead>
+                <tr>
+                    <th>CC Number</th>
+                    <th>Channel</th>
+                    <th>Function</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>CC 1</td>
+                    <td>Channel 1</td>
+                    <td>Volume Control</td>
+                </tr>
+                <tr>
+                    <td>CC 2</td>
+                    <td>Channel 2</td>
+                    <td>Volume Control</td>
+                </tr>
+                <tr>
+                    <td>CC 3</td>
+                    <td>Channel 3</td>
+                    <td>Volume Control</td>
+                </tr>
+                <tr>
+                    <td>CC 4</td>
+                    <td>Channel 4</td>
+                    <td>Volume Control</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Status Messages -->
+    <div id="status-message" class="message" style="display: none;"></div>
+</div>
+
+<!-- Edit Mapping Modal -->
+<div id="edit-mapping-modal" class="modal" style="display: none;">
+    <div class="modal-content">
+        <span class="close" onclick="closeModal('edit-mapping-modal')">&times;</span>
+        <h3>Edit MIDI Mapping</h3>
+        <form id="edit-mapping-form" onsubmit="updateMidiMapping(event)">
+            <input type="hidden" id="mapping-id">
+            <div class="form-group">
+                <label for="mapping-note">MIDI Note:</label>
+                <input type="number" id="mapping-note" class="form-control" min="0" max="127" readonly>
+            </div>
+            <div class="form-group">
+                <label for="mapping-sink">Channel:</label>
+                <select id="mapping-sink" class="form-control" required>
+                    <!-- Populated by JavaScript -->
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="mapping-action">Action:</label>
+                <select id="mapping-action" class="form-control" required>
+                    <option value="speaker">Speaker Toggle</option>
+                    <option value="headphone">Headphone Toggle</option>
+                    <option value="mute">Mute Toggle</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label for="mapping-description">Description:</label>
+                <input type="text" id="mapping-description" class="form-control">
+            </div>
+            <div class="button-group">
+                <button type="submit" class="btn btn-primary">Update</button>
+                <button type="button" onclick="closeModal('edit-mapping-modal')" class="btn btn-secondary">Cancel</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+    // Load MIDI mappings on page load
+    window.addEventListener('load', () => {
+        loadMidiMappings();
+        loadMidiConfig();
+    });
+</script>
+{% endblock %}
