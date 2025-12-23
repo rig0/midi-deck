@@ -6,11 +6,30 @@ Creates and configures the Flask web application.
 
 import logging
 import threading
+from pathlib import Path
 
 from flask import Flask
 from flask_cors import CORS
 
 logger = logging.getLogger(__name__)
+
+
+def get_version():
+    """
+    Read version from VERSION file.
+
+    Returns:
+        Version string or 'unknown' if file not found
+    """
+    try:
+        version_file = Path(__file__).parent.parent.parent / "VERSION"
+        if version_file.exists():
+            return version_file.read_text().strip()
+        return "unknown"
+    except Exception as e:
+        logger.warning(f"Failed to read VERSION file: {e}")
+        return "unknown"
+
 
 # Global references to core managers (set by main.py)
 _audio_manager = None
@@ -75,6 +94,11 @@ def create_app(config=None):
 
     app.register_blueprint(api_bp, url_prefix="/api")
     app.register_blueprint(web_bp)
+
+    # Context processor to inject version into all templates
+    @app.context_processor
+    def inject_version():
+        return {"app_version": get_version()}
 
     # Error handlers
     @app.errorhandler(404)
