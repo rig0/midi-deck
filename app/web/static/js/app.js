@@ -625,6 +625,7 @@ async function loadControlStatus() {
                         <tr>
                             <th>Sink / Output</th>
                             ${audioStatus.outputs.map(output => `<th>${output.name}</th>`).join('')}
+                            <th>Mute</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -645,6 +646,12 @@ async function loadControlStatus() {
                                         </td>
                                     `;
                                 }).join('')}
+                                <td>
+                                    <button onclick="toggleMute(${sink.id})"
+                                            class="connection-toggle ${sink.muted ? 'muted' : ''}">
+                                        ${sink.muted ? '✗' : ''}
+                                    </button>
+                                </td>
                             </tr>
                         `).join('')}
                     </tbody>

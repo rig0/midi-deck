@@ -452,6 +452,12 @@ small {
     color: white;
 }
 
+.connection-toggle.muted {
+    background: var(--danger-color);
+    border-color: var(--danger-color);
+    color: white;
+}
+
 .connection-toggle:hover {
     transform: scale(1.1);
 }
