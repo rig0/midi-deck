@@ -5,7 +5,7 @@ sleep 15s
 # ----------------------------
 TOOLBOX_NAME="midi-deck"   # replace with your toolbox name
 SCRIPTS=(
-    "/home/rambo/Apps/MidiDeck/midi_deck.py"
+    "/home/rambo/Apps/MidiDeck-v2/main.py"
 )
 
 # ----------------------------
