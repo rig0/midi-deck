@@ -288,11 +288,6 @@ class TestDatabase(unittest.TestCase):
             name="StateTestSession", description="Session for state testing"
         )
 
-        # Get test sinks
-        # sink1 = db.get_virtual_sink_by_name("MainSink")
-        # sink2 = db.get_virtual_sink_by_name("WebSink")
-        # output1 = db.get_hardware_output_by_name("SpeakerOut")
-
         # Create test state data
         volumes = {
             "MainSink": 0.75,
