@@ -102,6 +102,10 @@ def run_web_server(app, host=None, port=None):
     # Get configuration from database
     from app.database.models import get_config_value
 
+    # Suppress Flask's default logging
+    log = logging.getLogger("werkzeug")
+    log.setLevel(logging.ERROR)
+
     host = host or get_config_value("web_host", "127.0.0.1")
     port = port or int(get_config_value("web_port", "5000"))
 
