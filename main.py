@@ -71,7 +71,7 @@ def main():
         f"Arguments: web_only={args.web_only}, no_web={args.no_web}, config={args.config}"
     )
 
-    # Phase 2 - Initialize database
+    # Initialize database
     db_path = args.config or "data/midi_deck.db"
     logger.info(f"Initializing database at: {db_path}")
     try:
@@ -81,7 +81,7 @@ def main():
         logger.error(f"Failed to initialize database: {e}", exc_info=True)
         sys.exit(1)
 
-    # Phase 3 - Initialize AudioManager and LoopbackManager
+    # Initialize AudioManager and LoopbackManager
     logger.info("Initializing audio subsystems...")
     try:
         audio_manager = AudioManager()
@@ -91,7 +91,7 @@ def main():
         logger.error(f"Failed to initialize audio subsystems: {e}", exc_info=True)
         sys.exit(1)
 
-    # Phase 3 - Create virtual sinks from database
+    # Create virtual sinks from database
     logger.info("Creating virtual sinks from database configuration...")
     try:
         if audio_manager.initialize_sinks_from_database():
@@ -102,7 +102,7 @@ def main():
         logger.error(f"Failed to initialize virtual sinks: {e}", exc_info=True)
         # Don't exit - continue with degraded functionality
 
-    # Phase 4 - Initialize SessionManager and load current session
+    # Initialize SessionManager and load current session
     logger.info("Initializing session manager...")
     try:
         session_manager = SessionManager(audio_manager, loopback_manager)
@@ -119,7 +119,7 @@ def main():
         logger.warning("Continuing without session management")
 
     if args.web_only:
-        # Phase 5-6 - Run web interface only
+        # Run web interface only
         logger.info("Web-only mode: Starting web interface...")
         from app.web.app import create_app, run_web_server, set_managers
 
@@ -130,7 +130,7 @@ def main():
         run_web_server(app)
         sys.exit(0)
     else:
-        # Phase 1 - Initialize MIDI controller
+        # Initialize MIDI controller
         logger.info("MIDI mode: Initializing MIDI controller...")
         try:
             controller = MidiController(audio_manager, loopback_manager)
@@ -139,7 +139,7 @@ def main():
             logger.error(f"Failed to initialize MIDI controller: {e}", exc_info=True)
             sys.exit(1)
 
-        # Phase 7 - Start web interface in background if enabled
+        # Start web interface in background if enabled
         if not args.no_web:
             from threading import Thread
 
@@ -161,7 +161,7 @@ def main():
                 shutdown_event["triggered"] = True
                 logger.info("Shutdown signal received, cleaning up...")
                 controller.stop()
-                # Phase 4 - Save session on shutdown
+                # Save session on shutdown
                 try:
                     logger.info("Saving current session state before shutdown...")
                     if session_manager.save_current_session():
@@ -175,14 +175,14 @@ def main():
         signal.signal(signal.SIGINT, signal_handler)
         signal.signal(signal.SIGTERM, signal_handler)
 
-        # Phase 1 - Run main MIDI event loop (blocking)
+        # Run main MIDI event loop (blocking)
         try:
             logger.info("Starting MIDI event loop...")
             controller.run()
         except KeyboardInterrupt:
             logger.info("Shutting down gracefully...")
             controller.stop()
-            # Phase 4 - Save session on shutdown
+            # Save session on shutdown
             try:
                 logger.info("Saving current session state before shutdown...")
                 if session_manager.save_current_session():
