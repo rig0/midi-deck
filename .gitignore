@@ -76,6 +76,6 @@ data/midi_deck.db
 data/*.db-journal
 wip/
 
-#logs/
+logs/
 data/
 .legacy/
