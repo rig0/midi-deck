@@ -36,7 +36,9 @@
     <!-- Status Messages -->
     <div id="status-message" class="message" style="display: none;"></div>
 </div>
+{% endblock %}
 
+{% block scripts %}
 <script>
     // Auto-refresh every 1 second for real-time updates
     setInterval(loadControlStatus, 1000);
