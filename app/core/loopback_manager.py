@@ -202,7 +202,7 @@ class LoopbackManager:
                 "module-loopback",
                 f"source={source}",
                 f"sink={hardware_sink_name}",
-                "latency_msec=1",  # Low latency for immediate audio
+                # "latency_msec=1",  # Low latency for immediate audio
             ]
 
             result = subprocess.run(cmd, capture_output=True, text=True, check=True)
