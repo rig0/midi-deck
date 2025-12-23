@@ -25,3 +25,13 @@ repos:
     hooks:
       - id: isort
         args: [--profile=black]
+
+  - repo: local
+    hooks:
+      - id: pytest
+        name: Run pytest
+        entry: pytest
+        language: system
+        pass_filenames: false
+        types: [python]
+        stages: [pre-commit]
