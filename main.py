@@ -9,6 +9,7 @@ from pathlib import Path
 from app.core.audio_manager import AudioManager
 from app.core.loopback_manager import LoopbackManager
 from app.core.midi_controller import MidiController
+from app.core.session_manager import SessionManager
 from app.database import init_database
 
 # ----------------------------
@@ -101,17 +102,21 @@ def main():
         logger.error(f"Failed to initialize virtual sinks: {e}", exc_info=True)
         # Don't exit - continue with degraded functionality
 
-    # Phase 3 - Initialize loopback connections from session
-    logger.info("Restoring loopback connections from current session...")
+    # Phase 4 - Initialize SessionManager and load current session
+    logger.info("Initializing session manager...")
     try:
-        loopback_manager.initialize_connections_from_database()
-    except Exception as e:
-        logger.warning(f"Failed to restore connections: {e}")
-        # Don't exit - continue without restored connections
+        session_manager = SessionManager(audio_manager, loopback_manager)
 
-    # TODO: Phase 4 - Load or create default session
-    # session_manager = SessionManager(audio_manager, loopback_manager)
-    # session_manager.load_current_session()
+        # Load or create default session (this will restore volumes, mutes, and connections)
+        if session_manager.load_current_session():
+            logger.info("Current session loaded successfully")
+        else:
+            logger.warning("Failed to load current session, continuing with defaults")
+    except Exception as e:
+        logger.error(f"Failed to initialize session manager: {e}", exc_info=True)
+        # Create a placeholder session manager for shutdown
+        session_manager = SessionManager()
+        logger.warning("Continuing without session management")
 
     if args.web_only:
         # TODO: Phase 5-6 - Run web interface only
@@ -148,8 +153,15 @@ def main():
                 shutdown_event["triggered"] = True
                 logger.info("Shutdown signal received, cleaning up...")
                 controller.stop()
-                # TODO: Phase 4 - Save session on shutdown
-                # session_manager.save_current_session()
+                # Phase 4 - Save session on shutdown
+                try:
+                    logger.info("Saving current session state before shutdown...")
+                    if session_manager.save_current_session():
+                        logger.info("Session state saved successfully")
+                    else:
+                        logger.warning("Failed to save session state")
+                except Exception as e:
+                    logger.error(f"Error saving session on shutdown: {e}")
                 sys.exit(0)
 
         signal.signal(signal.SIGINT, signal_handler)
@@ -162,8 +174,15 @@ def main():
         except KeyboardInterrupt:
             logger.info("Shutting down gracefully...")
             controller.stop()
-            # TODO: Phase 4 - Save session on shutdown
-            # session_manager.save_current_session()
+            # Phase 4 - Save session on shutdown
+            try:
+                logger.info("Saving current session state before shutdown...")
+                if session_manager.save_current_session():
+                    logger.info("Session state saved successfully")
+                else:
+                    logger.warning("Failed to save session state")
+            except Exception as e:
+                logger.error(f"Error saving session on shutdown: {e}")
             sys.exit(0)
         except Exception as e:
             logger.error(f"Fatal error in MIDI event loop: {e}", exc_info=True)
