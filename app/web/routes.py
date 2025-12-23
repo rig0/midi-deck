@@ -371,19 +371,7 @@ def list_midi_mappings():
     """List all MIDI mappings."""
     try:
         mappings = get_all_midi_mappings()
-        return jsonify(
-            [
-                {
-                    "id": m.id,
-                    "midi_note": m.midi_note,
-                    "sink_id": m.sink_id,
-                    "sink_name": m.sink.name if m.sink else None,
-                    "action": m.action,
-                    "description": m.description,
-                }
-                for m in mappings
-            ]
-        )
+        return jsonify(mappings)
     except Exception as e:
         logger.error(f"Error listing MIDI mappings: {e}")
         return jsonify({"error": str(e)}), 500

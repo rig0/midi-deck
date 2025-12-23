@@ -873,6 +873,7 @@ def get_all_midi_mappings() -> List[Dict[str, Any]]:
             mappings = session.query(MidiMapping).order_by(MidiMapping.midi_note).all()
             return [
                 {
+                    "id": m.id,
                     "midi_note": m.midi_note,
                     "sink_id": m.sink_id,
                     "sink_name": m.sink.name,
