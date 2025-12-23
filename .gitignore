@@ -9,7 +9,6 @@ develop-eggs/
 dist/
 downloads/
 eggs/
-logs/
 .eggs/
 lib/
 lib64/
@@ -35,10 +34,6 @@ env/
 *.swo
 *~
 .DS_Store
-
-# Logs
-logs/*.log
-*.log
 
 # Database
 data/*.db
@@ -81,5 +76,6 @@ data/midi_deck.db
 data/*.db-journal
 wip/
 
+#logs/
 data/
 .legacy/
