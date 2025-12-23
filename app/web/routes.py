@@ -16,7 +16,7 @@ from app.database.models import (
     delete_hardware_output,
     delete_session,
     delete_virtual_sink,
-    get_all_config,
+    get_all_config_items,
     get_all_hardware_outputs,
     get_all_midi_mappings,
     get_all_sessions,
@@ -87,7 +87,7 @@ def midi_page():
 def get_config():
     """Get all configuration values."""
     try:
-        config = get_all_config()
+        config = get_all_config_items()
         return jsonify(
             [
                 {

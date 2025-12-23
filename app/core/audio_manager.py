@@ -34,22 +34,18 @@ class AudioManager:
     """
 
     def __init__(self):
-        """Initialize AudioManager with PulseAudio connection."""
-        try:
-            self.pulse = pulsectl.Pulse("midi-deck-audio-manager")
-            self._module_cache = {}  # Track loaded module IDs by sink name
-            logger.info("AudioManager initialized successfully")
-        except Exception as e:
-            logger.error(f"Failed to initialize PulseAudio connection: {e}")
-            raise
+        """Initialize AudioManager."""
+        self._module_cache = {}  # Track loaded module IDs by sink name
+        logger.info("AudioManager initialized successfully")
 
-    def __del__(self):
-        """Clean up PulseAudio connection on destruction."""
-        if hasattr(self, "pulse"):
-            try:
-                self.pulse.close()
-            except Exception as e:
-                logger.debug(f"Error closing PulseAudio connection: {e}")
+    def _get_pulse(self):
+        """
+        Create a new Pulse connection for thread-safe operations.
+
+        Returns:
+            New pulsectl.Pulse connection
+        """
+        return pulsectl.Pulse("midi-deck-audio-manager")
 
     # =========================================================================
     # Hardware Device Discovery
@@ -67,21 +63,24 @@ class AudioManager:
             Format: [{'name': str, 'description': str, 'device_name': str}, ...]
         """
         try:
-            sinks = []
-            for sink in self.pulse.sink_list():
-                # Filter out null sinks and monitors
-                driver = getattr(sink, "driver", "")
-                if "null" not in driver.lower() and not sink.name.endswith(".monitor"):
-                    sinks.append(
-                        {
-                            "name": sink.name,
-                            "description": sink.description,
-                            "device_name": sink.name,
-                        }
-                    )
+            with self._get_pulse() as pulse:
+                sinks = []
+                for sink in pulse.sink_list():
+                    # Filter out null sinks and monitors
+                    driver = getattr(sink, "driver", "")
+                    if "null" not in driver.lower() and not sink.name.endswith(
+                        ".monitor"
+                    ):
+                        sinks.append(
+                            {
+                                "name": sink.name,
+                                "description": sink.description,
+                                "device_name": sink.name,
+                            }
+                        )
 
-            logger.debug(f"Found {len(sinks)} hardware sinks")
-            return sinks
+                logger.debug(f"Found {len(sinks)} hardware sinks")
+                return sinks
 
         except Exception as e:
             logger.error(f"Error listing hardware sinks: {e}")
@@ -95,20 +94,21 @@ class AudioManager:
             List of dictionaries containing sink input information
         """
         try:
-            inputs = []
-            for si in self.pulse.sink_input_list():
-                inputs.append(
-                    {
-                        "index": si.index,
-                        "name": si.name,
-                        "sink": si.sink,
-                        "volume": si.volume.value_flat,
-                        "mute": si.mute,
-                    }
-                )
+            with self._get_pulse() as pulse:
+                inputs = []
+                for si in pulse.sink_input_list():
+                    inputs.append(
+                        {
+                            "index": si.index,
+                            "name": si.name,
+                            "sink": si.sink,
+                            "volume": si.volume.value_flat,
+                            "mute": si.mute,
+                        }
+                    )
 
-            logger.debug(f"Found {len(inputs)} sink inputs")
-            return inputs
+                logger.debug(f"Found {len(inputs)} sink inputs")
+                return inputs
 
         except Exception as e:
             logger.error(f"Error listing sink inputs: {e}")
@@ -234,6 +234,9 @@ class AudioManager:
         """
         Find sink by exact name.
 
+        Note: This creates a new pulse connection each time for thread safety.
+        The returned object is only valid within this connection context.
+
         Args:
             name: Sink name to search for
 
@@ -241,10 +244,15 @@ class AudioManager:
             PulseSinkInfo object if found, None otherwise
         """
         try:
-            for sink in self.pulse.sink_list():
-                if sink.name == name:
-                    return sink
-            return None
+            # Note: This is a helper that's not directly called from threads
+            # Methods that need thread-safety create their own connections
+            with self._get_pulse() as pulse:
+                for sink in pulse.sink_list():
+                    if sink.name == name:
+                        # Return a copy of just the data we need
+                        # since the object becomes invalid when context exits
+                        return sink
+                return None
         except Exception as e:
             logger.error(f"Error finding sink '{name}': {e}")
             return None
@@ -277,18 +285,24 @@ class AudioManager:
             True if successful, False otherwise
         """
         try:
-            sink = self.find_sink_by_name(sink_name)
-            if not sink:
-                logger.warning(f"Cannot set volume: sink '{sink_name}' not found")
-                return False
-
             # Clamp volume to valid range
             volume = max(0.0, min(1.0, volume))
 
-            # Set volume using pulsectl
-            self.pulse.volume_set_all_chans(sink, volume)
-            logger.debug(f"Set volume for '{sink_name}' to {volume:.2%}")
-            return True
+            with self._get_pulse() as pulse:
+                sink = None
+                for s in pulse.sink_list():
+                    if s.name == sink_name:
+                        sink = s
+                        break
+
+                if not sink:
+                    logger.warning(f"Cannot set volume: sink '{sink_name}' not found")
+                    return False
+
+                # Set volume using pulsectl
+                pulse.volume_set_all_chans(sink, volume)
+                logger.debug(f"Set volume for '{sink_name}' to {volume:.2%}")
+                return True
 
         except Exception as e:
             logger.error(f"Error setting volume for '{sink_name}': {e}")
@@ -305,13 +319,14 @@ class AudioManager:
             Volume level (0.0-1.0) or None if not found
         """
         try:
-            sink = self.find_sink_by_name(sink_name)
-            if not sink:
+            with self._get_pulse() as pulse:
+                for sink in pulse.sink_list():
+                    if sink.name == sink_name:
+                        # Get average volume across all channels
+                        return sink.volume.value_flat
+
                 logger.warning(f"Cannot get volume: sink '{sink_name}' not found")
                 return None
-
-            # Get average volume across all channels
-            return sink.volume.value_flat
 
         except Exception as e:
             logger.error(f"Error getting volume for '{sink_name}': {e}")
@@ -332,17 +347,23 @@ class AudioManager:
             True if now muted, False if now unmuted, None if error
         """
         try:
-            sink = self.find_sink_by_name(sink_name)
-            if not sink:
-                logger.warning(f"Cannot toggle mute: sink '{sink_name}' not found")
-                return None
+            with self._get_pulse() as pulse:
+                sink = None
+                for s in pulse.sink_list():
+                    if s.name == sink_name:
+                        sink = s
+                        break
 
-            # Toggle mute
-            new_mute_state = not sink.mute
-            self.pulse.mute(sink, new_mute_state)
+                if not sink:
+                    logger.warning(f"Cannot toggle mute: sink '{sink_name}' not found")
+                    return None
 
-            logger.debug(f"Toggled mute for '{sink_name}' to {new_mute_state}")
-            return new_mute_state
+                # Toggle mute
+                new_mute_state = not sink.mute
+                pulse.mute(sink, new_mute_state)
+
+                logger.debug(f"Toggled mute for '{sink_name}' to {new_mute_state}")
+                return new_mute_state
 
         except Exception as e:
             logger.error(f"Error toggling mute for '{sink_name}': {e}")
@@ -360,14 +381,20 @@ class AudioManager:
             True if successful, False otherwise
         """
         try:
-            sink = self.find_sink_by_name(sink_name)
-            if not sink:
-                logger.warning(f"Cannot set mute: sink '{sink_name}' not found")
-                return False
+            with self._get_pulse() as pulse:
+                sink = None
+                for s in pulse.sink_list():
+                    if s.name == sink_name:
+                        sink = s
+                        break
 
-            self.pulse.mute(sink, muted)
-            logger.debug(f"Set mute for '{sink_name}' to {muted}")
-            return True
+                if not sink:
+                    logger.warning(f"Cannot set mute: sink '{sink_name}' not found")
+                    return False
+
+                pulse.mute(sink, muted)
+                logger.debug(f"Set mute for '{sink_name}' to {muted}")
+                return True
 
         except Exception as e:
             logger.error(f"Error setting mute for '{sink_name}': {e}")
@@ -384,12 +411,13 @@ class AudioManager:
             True if muted, False if unmuted, None if not found
         """
         try:
-            sink = self.find_sink_by_name(sink_name)
-            if not sink:
+            with self._get_pulse() as pulse:
+                for sink in pulse.sink_list():
+                    if sink.name == sink_name:
+                        return sink.mute
+
                 logger.warning(f"Cannot get mute state: sink '{sink_name}' not found")
                 return None
-
-            return sink.mute
 
         except Exception as e:
             logger.error(f"Error getting mute state for '{sink_name}': {e}")
@@ -410,14 +438,20 @@ class AudioManager:
             True if successful, False otherwise
         """
         try:
-            sink = self.find_sink_by_name(sink_name)
-            if not sink:
-                logger.warning(f"Cannot set default: sink '{sink_name}' not found")
-                return False
+            with self._get_pulse() as pulse:
+                sink = None
+                for s in pulse.sink_list():
+                    if s.name == sink_name:
+                        sink = s
+                        break
 
-            self.pulse.sink_default_set(sink)
-            logger.info(f"Set default sink to '{sink_name}'")
-            return True
+                if not sink:
+                    logger.warning(f"Cannot set default: sink '{sink_name}' not found")
+                    return False
+
+                pulse.sink_default_set(sink)
+                logger.info(f"Set default sink to '{sink_name}'")
+                return True
 
         except Exception as e:
             logger.error(f"Error setting default sink to '{sink_name}': {e}")

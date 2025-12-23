@@ -26,8 +26,10 @@ class TestAudioManager(unittest.TestCase):
         self.subprocess_patcher = patch("app.core.audio_manager.subprocess")
         self.mock_subprocess = self.subprocess_patcher.start()
 
-        # Create mock pulse instance
+        # Create mock pulse instance that supports context manager
         self.mock_pulse = MagicMock()
+        self.mock_pulse.__enter__ = MagicMock(return_value=self.mock_pulse)
+        self.mock_pulse.__exit__ = MagicMock(return_value=False)
         self.mock_pulsectl.Pulse.return_value = self.mock_pulse
 
         # Initialize AudioManager with mocked dependencies
@@ -41,7 +43,6 @@ class TestAudioManager(unittest.TestCase):
     def test_initialization(self):
         """Test AudioManager initialization."""
         self.assertIsNotNone(self.audio_manager)
-        self.assertIsNotNone(self.audio_manager.pulse)
         self.assertIsNotNone(self.audio_manager._module_cache)
 
     def test_list_hardware_sinks(self):

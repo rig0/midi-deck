@@ -574,6 +574,21 @@ def get_all_config() -> Dict[str, Any]:
         return {}
 
 
+def get_all_config_items() -> List[Config]:
+    """
+    Get all configuration items as Config objects.
+
+    Returns:
+        List of Config objects
+    """
+    try:
+        with get_db_session() as session:
+            return session.query(Config).all()
+    except Exception as e:
+        logger.error(f"Error getting all config items: {e}")
+        return []
+
+
 # =============================================================================
 # CRUD Operations - Hardware Outputs
 # =============================================================================
