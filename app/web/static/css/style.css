@@ -53,7 +53,7 @@ header {
 }
 
 header h1 {
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.5rem;
     font-size: 1.5rem;
     font-weight: 600;
 }
@@ -305,7 +305,7 @@ small {
 }
 
 .channel-card h4 {
-    margin: 0 0 0.75rem 0;
+    margin: 0 0 0.75rem;
     color: var(--text-color);
 }
 
@@ -353,7 +353,7 @@ small {
 }
 
 .channel-control h4 {
-    margin: 0 0 1rem 0;
+    margin: 0 0 1rem;
     font-size: 1.1rem;
 }
 
@@ -486,7 +486,7 @@ small {
 }
 
 .config-item-info h4 {
-    margin: 0 0 0.25rem 0;
+    margin: 0 0 0.25rem;
     font-size: 1rem;
 }
 
@@ -530,7 +530,7 @@ small {
 }
 
 .session-card h4 {
-    margin: 0 0 0.5rem 0;
+    margin: 0 0 0.5rem;
     font-size: 1.1rem;
     display: flex;
     align-items: center;
@@ -582,7 +582,7 @@ small {
 }
 
 .midi-channel-group h4 {
-    margin: 0 0 0.75rem 0;
+    margin: 0 0 0.75rem;
 }
 
 .midi-mapping {
