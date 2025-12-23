@@ -35,8 +35,13 @@ class AudioManager:
 
     def __init__(self):
         """Initialize AudioManager."""
-        self._module_cache = {}  # Track loaded module IDs by sink name
-        logger.info("AudioManager initialized successfully")
+        try:
+            self.pulse = pulsectl.Pulse("midi-deck-audio-manager")
+            self._module_cache = {}  # Track loaded module IDs by sink name
+            logger.info("AudioManager initialized successfully")
+        except Exception as e:
+            logger.error(f"Failed to initialize PulseAudio connection: {e}")
+            raise
 
     def _get_pulse(self):
         """

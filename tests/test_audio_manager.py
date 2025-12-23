@@ -43,6 +43,7 @@ class TestAudioManager(unittest.TestCase):
     def test_initialization(self):
         """Test AudioManager initialization."""
         self.assertIsNotNone(self.audio_manager)
+        self.assertIsNotNone(self.audio_manager.pulse)
         self.assertIsNotNone(self.audio_manager._module_cache)
 
     def test_list_hardware_sinks(self):
