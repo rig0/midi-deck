@@ -1,9 +1,15 @@
 #!/usr/bin/env python3
 import argparse
 import logging
+import signal
 import sys
 from logging.handlers import RotatingFileHandler
 from pathlib import Path
+
+from app.core.audio_manager import AudioManager
+from app.core.loopback_manager import LoopbackManager
+from app.core.midi_controller import MidiController
+from app.database import init_database
 
 # ----------------------------
 # Logging Configuration
@@ -64,12 +70,47 @@ def main():
         f"Arguments: web_only={args.web_only}, no_web={args.no_web}, config={args.config}"
     )
 
-    # TODO: Phase 2 - Initialize database
-    # db_path = args.config or 'data/midi_deck.db'
-    # init_database(db_path)
+    # Phase 2 - Initialize database
+    db_path = args.config or "data/midi_deck.db"
+    logger.info(f"Initializing database at: {db_path}")
+    try:
+        init_database(db_path)
+        logger.info("Database initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize database: {e}", exc_info=True)
+        sys.exit(1)
+
+    # Phase 3 - Initialize AudioManager and LoopbackManager
+    logger.info("Initializing audio subsystems...")
+    try:
+        audio_manager = AudioManager()
+        loopback_manager = LoopbackManager(audio_manager.pulse)
+        logger.info("Audio subsystems initialized successfully")
+    except Exception as e:
+        logger.error(f"Failed to initialize audio subsystems: {e}", exc_info=True)
+        sys.exit(1)
+
+    # Phase 3 - Create virtual sinks from database
+    logger.info("Creating virtual sinks from database configuration...")
+    try:
+        if audio_manager.initialize_sinks_from_database():
+            logger.info("Virtual sinks initialized successfully")
+        else:
+            logger.warning("Some virtual sinks failed to initialize")
+    except Exception as e:
+        logger.error(f"Failed to initialize virtual sinks: {e}", exc_info=True)
+        # Don't exit - continue with degraded functionality
+
+    # Phase 3 - Initialize loopback connections from session
+    logger.info("Restoring loopback connections from current session...")
+    try:
+        loopback_manager.initialize_connections_from_database()
+    except Exception as e:
+        logger.warning(f"Failed to restore connections: {e}")
+        # Don't exit - continue without restored connections
 
     # TODO: Phase 4 - Load or create default session
-    # session_manager = SessionManager()
+    # session_manager = SessionManager(audio_manager, loopback_manager)
     # session_manager.load_current_session()
 
     if args.web_only:
@@ -80,9 +121,14 @@ def main():
         logger.warning("Web interface not yet implemented (Phase 5-6)")
         sys.exit(0)
     else:
-        # TODO: Phase 1 (later steps) - Start MIDI controller
-        logger.info("MIDI mode: Starting MIDI controller...")
-        # controller = MidiController()
+        # Phase 1 - Initialize MIDI controller
+        logger.info("MIDI mode: Initializing MIDI controller...")
+        try:
+            controller = MidiController(audio_manager, loopback_manager)
+            logger.info("MIDI controller initialized")
+        except Exception as e:
+            logger.error(f"Failed to initialize MIDI controller: {e}", exc_info=True)
+            sys.exit(1)
 
         # TODO: Phase 7 - Start web interface in background if enabled
         if not args.no_web:
@@ -94,16 +140,35 @@ def main():
                 "Web interface will be started in background (not yet implemented)"
             )
 
-        # TODO: Phase 1 (later steps) - Run main MIDI event loop (blocking)
+        # Setup signal handlers for graceful shutdown
+        shutdown_event = {"triggered": False}
+
+        def signal_handler(signum, frame):
+            if not shutdown_event["triggered"]:
+                shutdown_event["triggered"] = True
+                logger.info("Shutdown signal received, cleaning up...")
+                controller.stop()
+                # TODO: Phase 4 - Save session on shutdown
+                # session_manager.save_current_session()
+                sys.exit(0)
+
+        signal.signal(signal.SIGINT, signal_handler)
+        signal.signal(signal.SIGTERM, signal_handler)
+
+        # Phase 1 - Run main MIDI event loop (blocking)
         try:
-            logger.info("MIDI event loop starting (not yet implemented)...")
-            logger.warning("MIDI controller not yet implemented (Phase 1 continuation)")
-            # controller.run()
+            logger.info("Starting MIDI event loop...")
+            controller.run()
         except KeyboardInterrupt:
             logger.info("Shutting down gracefully...")
+            controller.stop()
             # TODO: Phase 4 - Save session on shutdown
             # session_manager.save_current_session()
             sys.exit(0)
+        except Exception as e:
+            logger.error(f"Fatal error in MIDI event loop: {e}", exc_info=True)
+            controller.stop()
+            sys.exit(1)
 
 
 if __name__ == "__main__":
