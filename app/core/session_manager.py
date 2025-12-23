@@ -3,9 +3,6 @@ Session Manager Module
 
 Handles session save/restore functionality for preserving and
 restoring audio state across application restarts.
-
-Phase 4 Implementation: Complete session management with state capture,
-restoration, and database persistence.
 """
 
 import logging

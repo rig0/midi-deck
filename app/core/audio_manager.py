@@ -7,9 +7,6 @@ Handles all PulseAudio/PipeWire interactions including:
 - Mute control
 - Hardware device enumeration
 - Virtual sink creation/removal
-
-Phase 3 Implementation: Complete sink management with Python-based
-PulseAudio/PipeWire integration replacing bash scripts.
 """
 
 import logging

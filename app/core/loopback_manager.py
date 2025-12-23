@@ -3,9 +3,6 @@ Loopback Manager Module
 
 Manages PulseAudio loopback modules for routing audio between
 virtual sinks and hardware outputs.
-
-Phase 3 Implementation: Complete loopback management with module
-loading/unloading via pactl commands.
 """
 
 import logging
