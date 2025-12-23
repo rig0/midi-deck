@@ -101,23 +101,3 @@ def setup_logging(log_level=None) -> logging.Logger:
     logger.debug(f"Log file: {log_file}")
 
     return logger
-
-
-def get_config(key: str, default=None):
-    """
-    Get a configuration value.
-
-    In Phase 1, this returns default values or environment variables.
-    In Phase 2, this will be updated to read from the database.
-
-    Args:
-        key: Configuration key to retrieve
-        default: Default value if key not found
-
-    Returns:
-        Configuration value or default
-    """
-    # TODO: Phase 2 - Read from database
-    # For now, check environment variables or return default
-    env_key = f"MIDI_DECK_{key.upper()}"
-    return os.environ.get(env_key, default)

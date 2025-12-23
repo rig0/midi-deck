@@ -100,7 +100,7 @@ def run_web_server(app, host=None, port=None):
         port: Port to bind to (default: 5000)
     """
     # Get configuration from database
-    from app.database.db import get_config_value
+    from app.database.models import get_config_value
 
     host = host or get_config_value("web_host", "127.0.0.1")
     port = port or int(get_config_value("web_port", "5000"))

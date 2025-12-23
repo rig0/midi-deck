@@ -8,8 +8,9 @@ import logging
 
 from flask import Blueprint, jsonify, render_template, request
 
-from app.database.db import (
-    create_hardware_output,
+from app.database.db import get_complete_config, get_system_status
+from app.database.models import add_hardware_output as create_hardware_output
+from app.database.models import (
     create_session,
     create_virtual_sink,
     delete_hardware_output,

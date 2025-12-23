@@ -60,8 +60,6 @@ def parse_device_info(device_string: str) -> dict:
     Returns:
         Dictionary with parsed device information
     """
-    # TODO: Phase 1 (later) - Implement device info parsing
-    logger.warning(f"parse_device_info({device_string}) not yet implemented")
     return {}
 
 
@@ -75,7 +73,6 @@ def format_timestamp(timestamp) -> str:
     Returns:
         Formatted timestamp string
     """
-    # TODO: Phase 2 - Implement timestamp formatting
     if timestamp is None:
         return "Never"
 

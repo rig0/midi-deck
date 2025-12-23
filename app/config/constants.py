@@ -1,21 +1,19 @@
 """
 Application Constants
 
-Defines constant values used throughout the application.
-These values are temporary during Phase 1 and will be moved
-to the database in Phase 2.
+Default values used for database initialization and fallbacks.
 """
 
 # MIDI Device Configuration
 MIDI_DEVICE_NAME = "MIDI Deck"
 
-# Hardware Output Devices (temporary - Phase 2 will use database)
+# Hardware Output Devices (defaults for database seeding)
 HARDWARE_OUTPUTS = {
     "SpeakerOut": "alsa_output.pci-0000_00_1f.3.analog-stereo",
     "HeadphoneOut": "alsa_output.usb-3142_fifine_Microphone-00.analog-stereo",
 }
 
-# Virtual Sinks/Channels (temporary - Phase 2 will use database)
+# Virtual Sinks/Channels (defaults for database seeding)
 VIRTUAL_SINKS = {
     1: "MainSink",
     2: "WebSink",
@@ -23,8 +21,7 @@ VIRTUAL_SINKS = {
     4: "DiscordSink",
 }
 
-# MIDI Button Mappings (temporary - Phase 2 will use database)
-# Format: midi_note -> (sink_name, action)
+# MIDI Button Mappings (defaults for database seeding)
 MIDI_BUTTON_MAPPINGS = {
     # MainSink (Channel 1)
     36: ("MainSink", "speaker"),

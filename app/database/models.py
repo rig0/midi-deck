@@ -649,6 +649,50 @@ def add_hardware_output(name: str, device_name: str, description: str = None) ->
         return False
 
 
+def get_hardware_output_by_id(output_id: int) -> Optional[HardwareOutput]:
+    """Get hardware output by ID."""
+    try:
+        with get_db_session() as session:
+            return session.query(HardwareOutput).filter_by(id=output_id).first()
+    except Exception as e:
+        logger.error(f"Error getting hardware output by ID {output_id}: {e}")
+        return None
+
+
+def update_hardware_output(output_id: int, **kwargs) -> Optional[HardwareOutput]:
+    """Update hardware output."""
+    try:
+        with get_db_session() as session:
+            output = session.query(HardwareOutput).filter_by(id=output_id).first()
+            if not output:
+                return None
+            for key, value in kwargs.items():
+                if hasattr(output, key):
+                    setattr(output, key, value)
+            session.commit()
+            logger.info(f"Updated hardware output ID {output_id}")
+            return output
+    except Exception as e:
+        logger.error(f"Error updating hardware output {output_id}: {e}")
+        return None
+
+
+def delete_hardware_output(output_id: int) -> bool:
+    """Delete hardware output by ID."""
+    try:
+        with get_db_session() as session:
+            output = session.query(HardwareOutput).filter_by(id=output_id).first()
+            if not output:
+                return False
+            session.delete(output)
+            session.commit()
+            logger.info(f"Deleted hardware output ID {output_id}")
+            return True
+    except Exception as e:
+        logger.error(f"Error deleting hardware output {output_id}: {e}")
+        return False
+
+
 # =============================================================================
 # CRUD Operations - Virtual Sinks
 # =============================================================================
@@ -719,6 +763,71 @@ def get_virtual_sink_by_channel(channel_number: int) -> Optional[VirtualSink]:
         return None
 
 
+def get_virtual_sink_by_id(sink_id: int) -> Optional[VirtualSink]:
+    """Get virtual sink by ID."""
+    try:
+        with get_db_session() as session:
+            return session.query(VirtualSink).filter_by(id=sink_id).first()
+    except Exception as e:
+        logger.error(f"Error getting virtual sink by ID {sink_id}: {e}")
+        return None
+
+
+def create_virtual_sink(
+    name: str, description: str, channel_number: int, **kwargs
+) -> Optional[VirtualSink]:
+    """Create a new virtual sink."""
+    try:
+        with get_db_session() as session:
+            sink = VirtualSink(
+                name=name,
+                description=description,
+                channel_number=channel_number,
+                **kwargs,
+            )
+            session.add(sink)
+            session.commit()
+            logger.info(f"Created virtual sink: {name}")
+            return sink
+    except Exception as e:
+        logger.error(f"Error creating virtual sink '{name}': {e}")
+        return None
+
+
+def update_virtual_sink(sink_id: int, **kwargs) -> Optional[VirtualSink]:
+    """Update virtual sink."""
+    try:
+        with get_db_session() as session:
+            sink = session.query(VirtualSink).filter_by(id=sink_id).first()
+            if not sink:
+                return None
+            for key, value in kwargs.items():
+                if hasattr(sink, key):
+                    setattr(sink, key, value)
+            session.commit()
+            logger.info(f"Updated virtual sink ID {sink_id}")
+            return sink
+    except Exception as e:
+        logger.error(f"Error updating virtual sink {sink_id}: {e}")
+        return None
+
+
+def delete_virtual_sink(sink_id: int) -> bool:
+    """Delete virtual sink by ID."""
+    try:
+        with get_db_session() as session:
+            sink = session.query(VirtualSink).filter_by(id=sink_id).first()
+            if not sink:
+                return False
+            session.delete(sink)
+            session.commit()
+            logger.info(f"Deleted virtual sink ID {sink_id}")
+            return True
+    except Exception as e:
+        logger.error(f"Error deleting virtual sink {sink_id}: {e}")
+        return False
+
+
 # =============================================================================
 # CRUD Operations - MIDI Mappings
 # =============================================================================
@@ -775,6 +884,34 @@ def get_all_midi_mappings() -> List[Dict[str, Any]]:
     except Exception as e:
         logger.error(f"Error getting all MIDI mappings: {e}")
         return []
+
+
+def get_midi_mapping_by_id(mapping_id: int) -> Optional[MidiMapping]:
+    """Get MIDI mapping by ID."""
+    try:
+        with get_db_session() as session:
+            return session.query(MidiMapping).filter_by(id=mapping_id).first()
+    except Exception as e:
+        logger.error(f"Error getting MIDI mapping by ID {mapping_id}: {e}")
+        return None
+
+
+def update_midi_mapping(mapping_id: int, **kwargs) -> Optional[MidiMapping]:
+    """Update MIDI mapping."""
+    try:
+        with get_db_session() as session:
+            mapping = session.query(MidiMapping).filter_by(id=mapping_id).first()
+            if not mapping:
+                return None
+            for key, value in kwargs.items():
+                if hasattr(mapping, key):
+                    setattr(mapping, key, value)
+            session.commit()
+            logger.info(f"Updated MIDI mapping ID {mapping_id}")
+            return mapping
+    except Exception as e:
+        logger.error(f"Error updating MIDI mapping {mapping_id}: {e}")
+        return None
 
 
 # =============================================================================
@@ -914,3 +1051,34 @@ def delete_session(session_id: int) -> bool:
     except Exception as e:
         logger.error(f"Error deleting session {session_id}: {e}")
         return False
+
+
+def get_session_by_id(session_id: int) -> Optional[Session]:
+    """Get session by ID."""
+    try:
+        with get_db_session() as session:
+            result = session.query(Session).filter_by(id=session_id).first()
+            if result:
+                _ = result.name, result.description, result.is_current
+            return result
+    except Exception as e:
+        logger.error(f"Error getting session by ID {session_id}: {e}")
+        return None
+
+
+def update_session(session_id: int, **kwargs) -> Optional[Session]:
+    """Update session."""
+    try:
+        with get_db_session() as session:
+            sess = session.query(Session).filter_by(id=session_id).first()
+            if not sess:
+                return None
+            for key, value in kwargs.items():
+                if hasattr(sess, key) and key != "id":
+                    setattr(sess, key, value)
+            session.commit()
+            logger.info(f"Updated session ID {session_id}")
+            return sess
+    except Exception as e:
+        logger.error(f"Error updating session {session_id}: {e}")
+        return None

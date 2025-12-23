@@ -63,8 +63,10 @@ class MidiController:
         self.button_mappings: Dict[int, tuple] = {}
 
         for mapping in mappings:
-            sink = mapping.virtual_sink
-            self.button_mappings[mapping.midi_note] = (sink.name, mapping.action)
+            self.button_mappings[mapping["midi_note"]] = (
+                mapping["sink_name"],
+                mapping["action"],
+            )
 
         # Fader mappings: CC# -> sink_name
         # Assuming faders are CC 1, 2, 3, 4 mapped to channels 1-4
