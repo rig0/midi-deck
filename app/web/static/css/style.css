@@ -11,21 +11,24 @@
 }
 
 :root {
-    --primary-color: #3498db;
-    --primary-hover: #2980b9;
-    --secondary-color: #95a5a6;
-    --secondary-hover: #7f8c8d;
-    --success-color: #27ae60;
-    --danger-color: #e74c3c;
-    --warning-color: #f39c12;
-    --bg-color: #ecf0f1;
-    --card-bg: #ffffff;
-    --header-bg: #2c3e50;
-    --text-color: #2c3e50;
-    --text-light: #7f8c8d;
-    --border-color: #bdc3c7;
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-    --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.15);
+    /* GitHub Dark Theme Colors */
+    --primary-color: #58a6ff;
+    --primary-hover: #388bfd;
+    --secondary-color: #6e7681;
+    --secondary-hover: #8b949e;
+    --success-color: #3fb950;
+    --danger-color: #f85149;
+    --warning-color: #d29922;
+    --bg-color: #0d1117;
+    --card-bg: #161b22;
+    --card-bg-hover: #21262d;
+    --header-bg: #161b22;
+    --text-color: #c9d1d9;
+    --text-light: #8b949e;
+    --border-color: #30363d;
+    --input-bg: #0d1117;
+    --shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+    --shadow-hover: 0 4px 12px rgba(0, 0, 0, 0.4);
 }
 
 body {
@@ -47,6 +50,7 @@ header {
     color: white;
     padding: 1rem 2rem;
     box-shadow: var(--shadow);
+    border-bottom: 1px solid var(--border-color);
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -95,14 +99,14 @@ main {
 }
 
 h2 {
-    color: var(--header-bg);
+    color: var(--text-color);
     margin-bottom: 1.5rem;
     font-size: 1.75rem;
     font-weight: 600;
 }
 
 h3 {
-    color: var(--header-bg);
+    color: var(--text-color);
     margin-bottom: 1rem;
     font-size: 1.25rem;
     font-weight: 600;
@@ -220,13 +224,15 @@ h3 {
     border: 1px solid var(--border-color);
     border-radius: 4px;
     font-size: 0.95rem;
+    background: var(--input-bg);
+    color: var(--text-color);
     transition: border-color 0.2s ease;
 }
 
 .form-control:focus {
     outline: none;
     border-color: var(--primary-color);
-    box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+    box-shadow: 0 0 0 3px rgba(88, 166, 255, 0.2);
 }
 
 .form-grid {
@@ -437,7 +443,8 @@ small {
     height: 40px;
     border: 2px solid var(--border-color);
     border-radius: 4px;
-    background: white;
+    background: var(--card-bg-hover);
+    color: var(--text-color);
     cursor: pointer;
     transition: all 0.2s ease;
     display: inline-flex;
@@ -705,27 +712,27 @@ small {
 }
 
 .message.success {
-    background: #d4edda;
-    color: #155724;
-    border: 1px solid #c3e6cb;
+    background: rgba(63, 185, 80, 0.15);
+    color: var(--success-color);
+    border: 1px solid rgba(63, 185, 80, 0.3);
 }
 
 .message.error {
-    background: #f8d7da;
-    color: #721c24;
-    border: 1px solid #f5c6cb;
+    background: rgba(248, 81, 73, 0.15);
+    color: var(--danger-color);
+    border: 1px solid rgba(248, 81, 73, 0.3);
 }
 
 .message.warning {
-    background: #fff3cd;
-    color: #856404;
-    border: 1px solid #ffeaa7;
+    background: rgba(210, 153, 34, 0.15);
+    color: var(--warning-color);
+    border: 1px solid rgba(210, 153, 34, 0.3);
 }
 
 .message.info {
-    background: #d1ecf1;
-    color: #0c5460;
-    border: 1px solid #bee5eb;
+    background: rgba(88, 166, 255, 0.15);
+    color: var(--primary-color);
+    border: 1px solid rgba(88, 166, 255, 0.3);
 }
 
 /* ========================================================================= */
@@ -760,8 +767,8 @@ small {
 .discovered-device-info code {
     display: block;
     font-size: 0.85rem;
-    color: var(--text-light);
-    background: white;
+    color: var(--text-color);
+    background: var(--card-bg-hover);
     padding: 0.25rem 0.5rem;
     border-radius: 3px;
 }
@@ -777,7 +784,7 @@ footer {
     color: var(--text-light);
     font-size: 0.9rem;
     background: var(--card-bg);
-    box-shadow: 0 -2px 8px rgba(0, 0, 0, 0.05);
+    border-top: 1px solid var(--border-color);
 }
 
 /* ========================================================================= */
