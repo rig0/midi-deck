@@ -1,8 +1,8 @@
 <div align="center">
 
-<img src="https://i.imgur.com/e6tMcvS.png" alt="Desktop-Agent" width="200"/>
+<img src="https://i.imgur.com/e6tMcvS.png" alt="Midi-Deck" width="200"/>
 
-# Midi Deck
+# Midi Deck Controller
 
 ![Python Version](https://img.shields.io/badge/Python%203.11+-3978b5?logo=python&logoColor=white)
 ![Flake8](https://img.shields.io/badge/Flake8-f6d844?logo=)
