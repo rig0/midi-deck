@@ -263,6 +263,17 @@ h3 {
     cursor: pointer;
 }
 
+select.form-control {
+    background: var(--input-bg);
+    color: var(--text-color);
+    cursor: pointer;
+}
+
+select.form-control option {
+    background: var(--card-bg);
+    color: var(--text-color);
+}
+
 textarea.form-control {
     resize: vertical;
     min-height: 80px;
@@ -338,6 +349,8 @@ small {
     font-size: 0.85rem;
     font-weight: 500;
     margin-right: 0.5rem;
+    background: var(--secondary-color);
+    color: white;
 }
 
 .status-badge.muted {
@@ -603,7 +616,8 @@ small {
 
 .midi-mapping {
     padding: 0.75rem;
-    background: white;
+    background: var(--card-bg-hover);
+    border: 1px solid var(--border-color);
     border-radius: 4px;
     margin-bottom: 0.5rem;
     display: flex;
