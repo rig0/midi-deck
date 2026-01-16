@@ -6,6 +6,8 @@ restoring audio state across application restarts.
 """
 
 import logging
+import threading
+import time
 from typing import Dict, List, Optional
 
 from app.database.db import (
@@ -43,7 +45,15 @@ class SessionManager:
         """
         self.audio_manager = audio_manager
         self.loopback_manager = loopback_manager
+
+        # Throttled auto-save configuration
         self._auto_save = True  # Auto-save on changes by default
+        self._dirty = False  # Track if state has changed since last save
+        self._last_save_time = 0.0  # Timestamp of last save
+        self._save_interval = 60.0  # Save at most every 60 seconds
+        self._stop_saver = False  # Flag to stop background saver
+        self._saver_thread = None  # Background saver thread
+
         logger.info("SessionManager initialized")
 
     def set_managers(self, audio_manager, loopback_manager):
@@ -252,12 +262,28 @@ class SessionManager:
                     state["mutes"][sink_name] = False
 
             # Capture connections
+            # Build device_name -> output_name mapping
+            from app.database.models import get_all_hardware_outputs
+
+            device_to_output = {}
+            for output in get_all_hardware_outputs():
+                device_to_output[output.device_name] = output.name
+
             for sink_name in sink_names:
-                connections = self.loopback_manager.get_connections(sink_name)
-                if connections:
-                    state["connections"][sink_name] = connections
-                else:
-                    state["connections"][sink_name] = []
+                # get_connections returns device names (e.g., alsa_output.xxx)
+                device_names = self.loopback_manager.get_connections(sink_name)
+
+                # Convert device names to output names for database storage
+                output_names = []
+                for device_name in device_names:
+                    if device_name in device_to_output:
+                        output_names.append(device_to_output[device_name])
+                    else:
+                        logger.warning(
+                            f"Unknown device '{device_name}' connected to '{sink_name}', skipping"
+                        )
+
+                state["connections"][sink_name] = output_names
 
             logger.debug(
                 f"Captured state: {len(state['volumes'])} volumes, "
@@ -313,16 +339,32 @@ class SessionManager:
             # Restore connections
             logger.debug(f"Restoring connections for {len(connections)} sinks...")
 
+            # Build output_name -> device_name mapping
+            from app.database.models import get_all_hardware_outputs
+
+            output_to_device = {}
+            for output in get_all_hardware_outputs():
+                output_to_device[output.name] = output.device_name
+
             # First, disconnect all existing connections to start fresh
             for sink_name in connections.keys():
                 self.loopback_manager.disconnect_all(sink_name)
 
             # Then reconnect based on saved state
+            # connections contains output names (e.g., SpeakerOut)
+            # but connect() needs device names (e.g., alsa_output.xxx)
             for sink_name, output_names in connections.items():
                 for output_name in output_names:
-                    if not self.loopback_manager.connect(sink_name, output_name):
+                    if output_name in output_to_device:
+                        device_name = output_to_device[output_name]
+                        if not self.loopback_manager.connect(sink_name, device_name):
+                            logger.warning(
+                                f"Failed to restore connection: {sink_name} -> {output_name} ({device_name})"
+                            )
+                            success = False
+                    else:
                         logger.warning(
-                            f"Failed to restore connection: {sink_name} -> {output_name}"
+                            f"Unknown output '{output_name}' for sink '{sink_name}', skipping"
                         )
                         success = False
 
@@ -460,15 +502,104 @@ class SessionManager:
 
             # Load the current session
             logger.info(f"Loading current session: '{current.name}' (ID: {current.id})")
-            return self.load_session(current.id)
+            success = self.load_session(current.id)
+
+            # Validate loaded state
+            if success:
+                state = load_session_state(current.id)
+                if state:
+                    connections = state.get("connections", {})
+                    total_connections = sum(len(conns) for conns in connections.values())
+                    if total_connections == 0:
+                        logger.warning(
+                            f"Session '{current.name}' loaded but has no audio connections. "
+                            "You may need to configure connections via web UI."
+                        )
+                    else:
+                        logger.info(f"Loaded {total_connections} audio connections")
+
+            return success
 
         except Exception as e:
             logger.error(f"Error loading current session: {e}", exc_info=True)
             return False
 
     # =========================================================================
-    # Auto-Save Functionality
+    # Throttled Auto-Save Functionality
     # =========================================================================
+
+    def mark_dirty(self):
+        """
+        Mark session state as dirty (changed since last save).
+
+        This should be called after state changes (volume, mute, connection changes).
+        The actual save will happen in the background at most once per save_interval.
+        """
+        if self._auto_save:
+            self._dirty = True
+            logger.debug("Session marked as dirty")
+
+    def _background_saver(self):
+        """
+        Background thread that periodically saves session if dirty.
+
+        Wakes up every few seconds to check if save is needed.
+        """
+        logger.info(
+            f"Background session saver started (interval: {self._save_interval}s)"
+        )
+
+        while not self._stop_saver:
+            # Sleep in small increments to allow quick shutdown
+            for _ in range(10):  # Check stop flag every 1 second
+                if self._stop_saver:
+                    break
+                time.sleep(1.0)
+
+            if self._stop_saver:
+                break
+
+            # Check if save is needed
+            if self._dirty and self._auto_save:
+                current_time = time.time()
+                time_since_save = current_time - self._last_save_time
+
+                if time_since_save >= self._save_interval:
+                    logger.debug("Auto-save triggered (throttled)")
+                    try:
+                        if self.save_current_session():
+                            self._dirty = False
+                            self._last_save_time = current_time
+                            logger.info("Auto-save completed successfully")
+                        else:
+                            logger.warning("Auto-save failed")
+                    except Exception as e:
+                        logger.error(f"Error during auto-save: {e}", exc_info=True)
+
+        logger.info("Background session saver stopped")
+
+    def start_auto_save(self):
+        """Start background auto-save thread."""
+        if self._saver_thread is None or not self._saver_thread.is_alive():
+            self._stop_saver = False
+            self._saver_thread = threading.Thread(
+                target=self._background_saver, daemon=True, name="SessionSaver"
+            )
+            self._saver_thread.start()
+            logger.info("Auto-save thread started")
+        else:
+            logger.debug("Auto-save thread already running")
+
+    def stop_auto_save(self):
+        """Stop background auto-save thread."""
+        if self._saver_thread and self._saver_thread.is_alive():
+            logger.info("Stopping auto-save thread...")
+            self._stop_saver = True
+            self._saver_thread.join(timeout=5.0)
+            if self._saver_thread.is_alive():
+                logger.warning("Auto-save thread did not stop cleanly")
+            else:
+                logger.info("Auto-save thread stopped")
 
     def enable_auto_save(self):
         """Enable auto-save functionality."""
@@ -488,17 +619,3 @@ class SessionManager:
             True if auto-save is enabled
         """
         return self._auto_save
-
-    def auto_save_if_enabled(self) -> bool:
-        """
-        Auto-save current session if auto-save is enabled.
-
-        This should be called after state changes (volume, mute, connection changes).
-
-        Returns:
-            True if saved or auto-save disabled, False if save failed
-        """
-        if not self._auto_save:
-            return True
-
-        return self.save_current_session()

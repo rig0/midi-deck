@@ -646,7 +646,7 @@ def set_sink_volume(sink_id):
         if not (0.0 <= volume <= 1.0):
             return jsonify({"error": "Volume must be between 0.0 and 1.0"}), 400
 
-        audio_manager, _, _ = get_managers()
+        audio_manager, _, session_manager = get_managers()
         if not audio_manager:
             return jsonify({"error": "Audio manager not available"}), 503
 
@@ -657,6 +657,10 @@ def set_sink_volume(sink_id):
         success = audio_manager.set_volume(sink.name, volume)
         if not success:
             return jsonify({"error": "Failed to set volume"}), 500
+
+        # Mark session as dirty after volume change
+        if session_manager:
+            session_manager.mark_dirty()
 
         return jsonify({"success": True, "volume": volume})
     except Exception as e:
@@ -674,7 +678,7 @@ def set_sink_mute(sink_id):
 
         muted = bool(data["muted"])
 
-        audio_manager, _, _ = get_managers()
+        audio_manager, _, session_manager = get_managers()
         if not audio_manager:
             return jsonify({"error": "Audio manager not available"}), 503
 
@@ -686,6 +690,10 @@ def set_sink_mute(sink_id):
         if not success:
             return jsonify({"error": "Failed to set mute"}), 500
 
+        # Mark session as dirty after mute change
+        if session_manager:
+            session_manager.mark_dirty()
+
         return jsonify({"success": True, "muted": muted})
     except Exception as e:
         logger.error(f"Error setting mute: {e}")
@@ -696,7 +704,7 @@ def set_sink_mute(sink_id):
 def toggle_connection(sink_id, output_id):
     """Toggle loopback connection between sink and output."""
     try:
-        _, loopback_manager, _ = get_managers()
+        _, loopback_manager, session_manager = get_managers()
         if not loopback_manager:
             return jsonify({"error": "Loopback manager not available"}), 503
 
@@ -709,6 +717,10 @@ def toggle_connection(sink_id, output_id):
             return jsonify({"error": "Output not found"}), 404
 
         new_state = loopback_manager.toggle(sink.name, output.device_name)
+
+        # Mark session as dirty after connection change
+        if session_manager:
+            session_manager.mark_dirty()
 
         return jsonify(
             {

@@ -367,11 +367,14 @@ def _populate_default_data():
             ),
         ]
 
+        output_map = {}
         for name, device_name, description in default_outputs:
             output = HardwareOutput(
                 name=name, device_name=device_name, description=description
             )
             session.add(output)
+            session.flush()  # Flush to get the ID
+            output_map[name] = output.id
 
         # Default virtual sinks
         default_sinks = [
@@ -439,6 +442,21 @@ def _populate_default_data():
                 session_id=default_session.id, sink_id=sink_id, is_muted=False
             )
             session.add(mute)
+
+        # Add default connections (all sinks connected to SpeakerOut by default)
+        speaker_output_id = output_map.get("SpeakerOut")
+        if speaker_output_id:
+            for sink_name, sink_id in sink_map.items():
+                conn = SessionConnection(
+                    session_id=default_session.id,
+                    sink_id=sink_id,
+                    output_id=speaker_output_id,
+                    is_connected=True,
+                )
+                session.add(conn)
+            logger.info("Added default connections: all sinks -> SpeakerOut")
+        else:
+            logger.warning("SpeakerOut not found, no default connections created")
 
         session.commit()
         logger.info("Default data populated successfully")

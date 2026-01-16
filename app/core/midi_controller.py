@@ -23,16 +23,18 @@ class MidiController:
     actions to audio management components.
     """
 
-    def __init__(self, audio_manager, loopback_manager):
+    def __init__(self, audio_manager, loopback_manager, session_manager=None):
         """
         Initialize MIDI controller with configuration.
 
         Args:
             audio_manager: AudioManager instance
             loopback_manager: LoopbackManager instance
+            session_manager: SessionManager instance (optional, for auto-save)
         """
         self.audio_manager = audio_manager
         self.loopback_manager = loopback_manager
+        self.session_manager = session_manager
 
         # Load configuration from database
         self.midi_device_name = get_config_value("midi_device_name", "MIDI Deck")
@@ -139,6 +141,9 @@ class MidiController:
         # Set volume via AudioManager
         if self.audio_manager.set_volume(sink_name, volume):
             logger.debug(f"CC {control}: set {sink_name} volume to {volume:.2%}")
+            # Mark session as dirty after volume change
+            if self.session_manager:
+                self.session_manager.mark_dirty()
         else:
             logger.warning(f"CC {control}: failed to set volume for {sink_name}")
 
@@ -166,6 +171,9 @@ class MidiController:
                 logger.info(
                     f"Toggled mute for {sink_name}: {'muted' if new_state else 'unmuted'}"
                 )
+                # Mark session as dirty after mute change
+                if self.session_manager:
+                    self.session_manager.mark_dirty()
             else:
                 logger.warning(f"Failed to toggle mute for {sink_name}")
 
@@ -198,6 +206,9 @@ class MidiController:
                         f"Toggled {output_name} for {sink_name}: "
                         f"{'connected' if new_state else 'disconnected'}"
                     )
+                    # Mark session as dirty after connection change
+                    if self.session_manager:
+                        self.session_manager.mark_dirty()
                 else:
                     logger.warning(f"Hardware output {output_name} not found")
             else:

@@ -118,6 +118,10 @@ def main():
         session_manager = SessionManager()
         logger.warning("Continuing without session management")
 
+    # Start background auto-save thread
+    if session_manager:
+        session_manager.start_auto_save()
+
     if args.web_only:
         # Run web interface only
         logger.info("Web-only mode: Starting web interface...")
@@ -133,7 +137,7 @@ def main():
         # Initialize MIDI controller
         logger.info("MIDI mode: Initializing MIDI controller...")
         try:
-            controller = MidiController(audio_manager, loopback_manager)
+            controller = MidiController(audio_manager, loopback_manager, session_manager)
             logger.info("MIDI controller initialized")
         except Exception as e:
             logger.error(f"Failed to initialize MIDI controller: {e}", exc_info=True)
@@ -161,8 +165,9 @@ def main():
                 shutdown_event["triggered"] = True
                 logger.info("Shutdown signal received, cleaning up...")
                 controller.stop()
-                # Save session on shutdown
+                # Stop auto-save thread and save session on shutdown
                 try:
+                    session_manager.stop_auto_save()
                     logger.info("Saving current session state before shutdown...")
                     if session_manager.save_current_session():
                         logger.info("Session state saved successfully")
@@ -182,8 +187,9 @@ def main():
         except KeyboardInterrupt:
             logger.info("Shutting down gracefully...")
             controller.stop()
-            # Save session on shutdown
+            # Stop auto-save thread and save session on shutdown
             try:
+                session_manager.stop_auto_save()
                 logger.info("Saving current session state before shutdown...")
                 if session_manager.save_current_session():
                     logger.info("Session state saved successfully")
